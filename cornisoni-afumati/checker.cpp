@@ -1,71 +1,63 @@
 /**
- * Author:     Alexandru Tifui
+ * Author:     Alexandru Tifui, Theodor Moroianu
 */
 
 #include <bits/stdc++.h>
-#include <exception>
-#include <random>
-
 using namespace std;
 
+// Global state of the interpreter.
+int N;
 vector <string> instructions;
 vector <vector<string>> decoded_ops;
 vector <int> reg(5, 0);
-int N;
 vector <int> perm;
-// int benchmark;
+
 int no_executed_instructions = 0;
 
-const int NO_EXEC_INSTR_THRESHOLD = 5000000; // TODO choose this more carefully
+const int NO_EXEC_INSTR_THRESHOLD = 10'000'000; // TODO choose this more carefully
 
-void load_ok_data(ifstream& fin, ifstream& fok)
-{
-  assert(fin >> N);
-  perm.resize(N);
-  for (int i = 0; i < N; i++) {
-    assert(fok >> perm[i]);
-    assert(0 <= perm[i] and perm[i] < N);
-  }
-  // assert(fok >> benchmark);
-}
+bool DISPLAY_MOVES = false;
 
-vector <string> split_instr(string instr, int pos) 
+vector <string> DecodeInstruction(string instr) 
 {
-  vector <string> ans;
-  ans.push_back("");
-  for (int i = pos; i < (int)instr.size(); i++) {
-    if (instr[i] == ' ') {
-      ans.push_back("");
+  vector <string> tokens;
+  tokens.push_back("");
+  for (auto i : instr) {
+    if (i == ' ') {
+      tokens.push_back("");
     }
     else {
-      ans.back().push_back(instr[i]);
+      tokens.back().push_back(i);
     }
   }
 
-  while (!ans.empty() and ans.back() == "")
-    ans.pop_back();
-  return ans;
+  // removing the index of the instruction
+  tokens.erase(tokens.begin());
+
+  while (!tokens.empty() and tokens.back() == "")
+    tokens.pop_back();
+  return tokens;
 }
 
-bool is_var_reg(string s) 
+bool IsVariableRegister(string s) 
 {
   return s == "A" or s == "B" or s == "C" or s == "D" or s == "E";
 }
 
-bool is_const_reg(string s) 
+bool IsConstantRegister(string s) 
 {
   return s == "N" or s == "Z";
 }
 
-bool is_reg(string s)
+bool IsRegister(string s)
 {
-  return is_var_reg(s) or is_const_reg(s);
+  return IsVariableRegister(s) or IsConstantRegister(s);
 }
 
-int get_reg_val(string s)
+int GetRegisterValue(string s)
 {
-  assert(is_reg(s));
-  if (is_var_reg(s))
+  assert(IsRegister(s));
+  if (IsVariableRegister(s))
     return reg[s[0] - 'A'];
   if (s == "N")
     return N;
@@ -74,17 +66,17 @@ int get_reg_val(string s)
   assert(false);
 }
 
-bool valid(string instr, int expected_no) 
+bool FetchAndDecode(string instr, int expected_instruction_no) 
 {
-  int ans = 0;
+  int computed_instruction_no = 0;
   int pos = 0;
   int len = instr.size();
   while (pos < len and isdigit(instr[pos])) {
-    ans = ans * 10 + instr[pos] - '0';
+    computed_instruction_no = computed_instruction_no * 10 + instr[pos] - '0';
     pos++;
   }
 
-  if (ans != expected_no) 
+  if (computed_instruction_no != expected_instruction_no) 
     return false;
 
   if (instr[pos] != '.')
@@ -95,69 +87,54 @@ bool valid(string instr, int expected_no)
     return false;
   pos++;
 
-  vector <string> I = split_instr(instr, pos);
-  decoded_ops.push_back(I);
-  if (I.size() < 1)
+  vector <string> instruction = DecodeInstruction(instr);
+  decoded_ops.push_back(instruction);
+
+  if (instruction.size() < 1)
     return false;
 
-  if (I[0] == "IF_LESS_GOTO" or I[0] == "IF_SAME_GOTO" or I[0] == "IF_DIFF_GOTO") {
-    if (I.size() != 4)
+  if (instruction[0] == "IF_LESS_GOTO" or instruction[0] == "IF_SAME_GOTO" or instruction[0] == "IF_DIFF_GOTO") {
+    if (instruction.size() != 4)
       return false;
 
-    if (!is_reg(I[1]))
+    if (!IsRegister(instruction[1]))
       return false;
 
-    if (!is_reg(I[2]))
+    if (!IsRegister(instruction[2]))
       return false;
 
-    if (stoi(I[3]) < 0 or stoi(I[3]) >= (int)instructions.size())
+    if (stoi(instruction[3]) < 0 or stoi(instruction[3]) >= (int)instructions.size())
       return false;
   }
-  else if (I[0] == "ASSIGN") {
-    if (I.size() != 3)
+  else if (instruction[0] == "ASSIGN") {
+    if (instruction.size() != 3)
       return false;
 
-    if (!is_var_reg(I[1]))
+    if (!IsVariableRegister(instruction[1]))
       return false;
 
-    if (!is_reg(I[2]))
+    if (!IsRegister(instruction[2]))
       return false;
   }
-  else if (I[0] == "INC" or I[0] == "DEC" or I[0] == "PLOAD") {
-    if (I.size() != 2)
+  else if (instruction[0] == "INC" or instruction[0] == "DEC" or instruction[0] == "PLOAD") {
+    if (instruction.size() != 2)
       return false;
 
-    if (!is_var_reg(I[1]))
+    if (!IsVariableRegister(instruction[1]))
       return false;
-
-    // if (I[0] == "PLOAD") {
-    //   int val = get_reg_val(I[1]);
-    //   if (val < 1 or val > N)
-    //     return false;
-    // }
   }
-  else if (I[0] == "SWAP" or I[0] == "PSWAP") {
-    if (I.size() != 3)
+  else if (instruction[0] == "SWAP" or instruction[0] == "PSWAP") {
+    if (instruction.size() != 3)
       return false;
 
-    if (!is_var_reg(I[1]))
+    if (!IsVariableRegister(instruction[1]))
       return false;
 
-    if (!is_var_reg(I[2]))
+    if (!IsVariableRegister(instruction[2]))
       return false;
-
-    // if (I[0] == "PSWAP") {
-    //   int val1 = get_reg_val(I[1]);
-    //   if (val1 < 1 or val1 > N)
-    //     return false;
-
-    //   int val2 = get_reg_val(I[2]);
-    //   if (val2 < 2 or val2 > N)
-    //     return false;
-    // }
   }
-  else if (I[0] == "END") {
-    if (I.size() != 1)
+  else if (instruction[0] == "END") {
+    if (instruction.size() != 1)
       return false;
   }
   else
@@ -166,7 +143,7 @@ bool valid(string instr, int expected_no)
   return true;
 }
 
-bool parse_instructions(ifstream& fout)
+bool LoadAndValidateInstructions(ifstream& fout)
 {
   string line;
   while (getline(fout, line)) {
@@ -175,7 +152,7 @@ bool parse_instructions(ifstream& fout)
 
   int idx = 0;
   for (auto line : instructions) {
-    if (!valid(line, idx)) {
+    if (!FetchAndDecode(line, idx)) {
       cerr << "Instruction " << line << " is invalid\n";
       return false;
     }
@@ -185,16 +162,12 @@ bool parse_instructions(ifstream& fout)
   return true;
 }
 
-void execute_instruction(vector <string> I, int &pc) 
+void ExecuteInstruction(vector <string> I, int &pc) 
 {
-  // cerr << "Instruction: ";
-  // for (auto i : I)
-  //   cerr << i << ' ';
-  // cerr << '\n';
   // do pc-- after the jump in case of GOTO instructions
   if (I[0] == "IF_LESS_GOTO") {
-    int val1 = get_reg_val(I[1]);
-    int val2 = get_reg_val(I[2]);
+    int val1 = GetRegisterValue(I[1]);
+    int val2 = GetRegisterValue(I[2]);
 
     if (val1 < val2) {
       pc = stoi(I[3]);
@@ -202,8 +175,8 @@ void execute_instruction(vector <string> I, int &pc)
     }
   }
   else if (I[0] == "IF_DIFF_GOTO") {
-    int val1 = get_reg_val(I[1]);
-    int val2 = get_reg_val(I[2]);
+    int val1 = GetRegisterValue(I[1]);
+    int val2 = GetRegisterValue(I[2]);
 
     if (val1 != val2) {
       pc = stoi(I[3]);
@@ -211,8 +184,8 @@ void execute_instruction(vector <string> I, int &pc)
     }
   }
   else if (I[0] == "IF_SAME_GOTO") {
-    int val1 = get_reg_val(I[1]);
-    int val2 = get_reg_val(I[2]);
+    int val1 = GetRegisterValue(I[1]);
+    int val2 = GetRegisterValue(I[2]);
 
     if (val1 == val2) {
       pc = stoi(I[3]);
@@ -220,7 +193,7 @@ void execute_instruction(vector <string> I, int &pc)
     }
   }
   else if (I[0] == "ASSIGN") {
-    int val2 = get_reg_val(I[2]);
+    int val2 = GetRegisterValue(I[2]);
     reg[I[1][0] - 'A'] = val2;
   }
   else if (I[0] == "INC") {
@@ -230,25 +203,25 @@ void execute_instruction(vector <string> I, int &pc)
     reg[I[1][0] - 'A']--;
   }
   else if (I[0] == "PLOAD") {
-    int val = get_reg_val(I[1]);
+    int val = GetRegisterValue(I[1]);
     if (val < 0 or val >= N)
       throw "Runtime error";
 
     reg[I[1][0] - 'A'] = perm[val];
   }
   else if (I[0] == "SWAP") {
-    int val1 = get_reg_val(I[1]);
-    int val2 = get_reg_val(I[2]);
+    int val1 = GetRegisterValue(I[1]);
+    int val2 = GetRegisterValue(I[2]);
 
     reg[I[1][0] - 'A'] = val2;
     reg[I[2][0] - 'A'] = val1;
   }
   else if (I[0] == "PSWAP") {
-    int val1 = get_reg_val(I[1]);
+    int val1 = GetRegisterValue(I[1]);
     if (val1 < 0 or val1 >= N)
       throw "Runtime error";
 
-    int val2 = get_reg_val(I[2]);
+    int val2 = GetRegisterValue(I[2]);
     if (val2 < 0 or val2 >= N)
       throw "Runtime error";
 
@@ -261,20 +234,22 @@ void execute_instruction(vector <string> I, int &pc)
     throw "Runtime error";
 }
 
-void execute()
+void Execute()
 {
   for (int pc = 0; pc < (int)decoded_ops.size(); pc++) {
-    // cout << "Executing instruction " << pc << "(" << instructions[pc] << ")\n";
-    // cout << "Current permutation: ";
-    // for (int i = 0; i < N; i++)
-    //   cout << perm[i] << ' ';
-    // cout << '\n';
-    // cout << "Registers: ";
-    // for (int i = 0; i < 5; i++)
-    //   cout << (char)('A' + i) << "=" << reg[i] << ' ';
-    // cout << '\n';
+    if (DISPLAY_MOVES) {
+      cout << "Program counter   = " << pc << '\n';
+      cout << "Permutation       = { ";
+      for (int i = 0; i < N; i++)
+        cout << perm[i] << ' ';
+      cout << "}\n";
+      cout << "Variable registers:";
+      for (int i = 0; i < 5; i++)
+        cout << "   * " << (char)('A' + i) << " = " << reg[i] << '\n';
+      cout << "Instruction to run:\n     " <<  instructions[pc] << "\n\n";
+    }
 
-    execute_instruction(decoded_ops[pc], pc);
+    ExecuteInstruction(decoded_ops[pc], pc);
     no_executed_instructions++;
 
     // cout << '\n';
@@ -311,7 +286,7 @@ int main(int argc, char** argv)
   perm.resize(N);
 
   try {
-    if (!parse_instructions(fout)) {
+    if (!LoadAndValidateInstructions(fout)) {
       throw "Invalid input\n";
     }
 
@@ -325,7 +300,7 @@ int main(int argc, char** argv)
       no_executed_instructions = 0;
       auto original_permutation = perm;
 
-      execute();
+      Execute();
 
       if (!valid_output()) {
         cout << "WA on trial " << trial << "\n";
@@ -339,13 +314,13 @@ int main(int argc, char** argv)
         //   cout << perm[i] << ' ';
       }
     }
+    cout << "OK\n";
   }
   catch(const char* e) {
     cout << "WA\n";
     cout << e << '\n';
   }
 
-  cout << "OK\n";
 
   return 0;
 }
