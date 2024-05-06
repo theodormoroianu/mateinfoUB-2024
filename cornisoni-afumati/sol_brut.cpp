@@ -30,6 +30,7 @@ int main()
       instr.push_back("IF_LESS_GOTO C D " + to_string(pos + 2));
       instr.push_back("PSWAP A B");
     }
+    instr.push_back("INC A");
   }
 
   for (int i = 0; i < (int)instr.size(); i++)

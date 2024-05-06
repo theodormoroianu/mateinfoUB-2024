@@ -16,7 +16,7 @@ vector <int> perm;
 // int benchmark;
 int no_executed_instructions = 0;
 
-const int NO_EXEC_INSTR_THRESHOLD = 50000; // TODO choose this more carefully
+const int NO_EXEC_INSTR_THRESHOLD = 5000000; // TODO choose this more carefully
 
 void load_ok_data(ifstream& fin, ifstream& fok)
 {
@@ -187,10 +187,10 @@ bool parse_instructions(ifstream& fout)
 
 void execute_instruction(vector <string> I, int &pc) 
 {
-  cerr << "Instruction: ";
-  for (auto i : I)
-    cerr << i << ' ';
-  cerr << '\n';
+  // cerr << "Instruction: ";
+  // for (auto i : I)
+  //   cerr << i << ' ';
+  // cerr << '\n';
   // do pc-- after the jump in case of GOTO instructions
   if (I[0] == "IF_LESS_GOTO") {
     int val1 = get_reg_val(I[1]);
@@ -327,10 +327,9 @@ int main(int argc, char** argv)
 
       execute();
 
-      if (valid_output())
-        cout << "OK\n";
-      else {
+      if (!valid_output()) {
         cout << "WA on trial " << trial << "\n";
+        return 0;
         // cout << "Original permutation: " << '\n';
         // for (int i = 0; i < N; i++)
         //   cout << original_permutation[i] << ' ';
@@ -345,6 +344,8 @@ int main(int argc, char** argv)
     cout << "WA\n";
     cout << e << '\n';
   }
+
+  cout << "OK\n";
 
   return 0;
 }
