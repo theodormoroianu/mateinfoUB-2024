@@ -1,9 +1,20 @@
-#include <iostream>
-
+/**
+ * Author: Theodor Moroianu
+ * Intended: 100
+ * Complexity: O(N)
+*/
+#include <bits/stdc++.h>
 using namespace std;
 
-int main() {
-  int a, b; cin >> a >> b;
-  cout << a + b << endl;
-  return 0;
+vector <string> limbaj = {
+  // A salveaza pozitia curenta a primului element din ciclu
+
+
+
+};
+
+int main()
+{
+  for (auto line : limbaj)
+    cout << line << '\n';
 }

@@ -11,6 +11,8 @@ Detalii limbaj:
             + daca r1 < r2 atunci goto x
        - IF_DIFF_GOTO r1 r2 x 
             + daca r1 != r2 atunci goto x
+       - IF_SAME_GOTO r1 r2 x 
+            + daca r1 == r2 atunci goto x
        - ASSIGN r1 r2 
             + r1 ia valoarea lui r2 (r1 nu poate fi constatn)
        - INC r
@@ -23,6 +25,7 @@ Detalii limbaj:
            + r ia valoarea lui perm[r] (r nu poate fi constant)
        - PWASP r1 r2
            + swap(perm[r1], perm[r2]) (r1, r2 nu pot fi constanti)
+       - END
 
 
 TODO:
