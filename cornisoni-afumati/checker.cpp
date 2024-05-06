@@ -95,10 +95,10 @@ bool valid(string instr, int expected_no)
 
   vector <string> I = split_instr(instr, pos);
   decoded_ops.push_back(I);
-  if (I.size() < 2)
+  if (I.size() < 1)
     return false;
 
-  if (I[0] == "IF_LESS_GOTO" or I[0] == "IF_DIFF_THEN_GOTO") {
+  if (I[0] == "IF_LESS_GOTO" or I[0] == "IF_SAME_GOTO" or I[0] == "IF_DIFF_THEN_GOTO") {
     if (I.size() != 4)
       return false;
 
@@ -154,6 +154,10 @@ bool valid(string instr, int expected_no)
     //     return false;
     // }
   }
+  else if (I[0] == "END") {
+    if (I.size() != 1)
+      return false;
+  }
   else
     return false;
 
@@ -198,6 +202,15 @@ void execute_instruction(vector <string> I, int &pc)
       pc--;
     }
   }
+  else if (I[0] == "IF_SAME_THEN_GOTO") {
+    int val1 = get_reg_val(I[1]);
+    int val2 = get_reg_val(I[2]);
+
+    if (val1 == val2) {
+      pc = stoi(I[3]);
+      pc--;
+    }
+  }
   else if (I[0] == "ASSIGN") {
     int val2 = get_reg_val(I[2]);
     reg[I[1][0] - 'A'] = val2;
@@ -233,6 +246,9 @@ void execute_instruction(vector <string> I, int &pc)
 
     swap(perm[val1], perm[val2]);
   }
+  else if (I[0] == "END") {
+    pc = -1;
+  }
   else
     throw "Runtime error";
 }
@@ -245,6 +261,9 @@ void execute()
 
     if (no_executed_instructions > NO_EXEC_INSTR_THRESHOLD)
       throw "Too many instructions\n";
+
+    if (pc == -1) // END was called
+      break;
   }
 }
 

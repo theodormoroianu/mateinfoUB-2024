@@ -26,7 +26,14 @@ Detalii limbaj:
        - PWASP r1 r2
            + swap(perm[r1], perm[r2]) (r1, r2 nu pot fi constanti)
        - END
+           + opreste programul
 
+O instructiune in program va fi prefixata de indicele ei. Exemplu de program:
+  0. INC A
+  1. INC A
+  2. INC B
+  3. IF_DIFF_GOTO A B 2
+  4. END
 
 TODO:
   - de stabilit numarul maxim de operatii pe care le permitem
