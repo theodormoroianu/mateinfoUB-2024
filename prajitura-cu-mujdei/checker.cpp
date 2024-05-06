@@ -1,3 +1,6 @@
+/**
+ * Author: Theodor Moroianu
+*/
 #include <bits/stdc++.h>
 using namespace std;
 
