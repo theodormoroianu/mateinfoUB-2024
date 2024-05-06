@@ -3,6 +3,8 @@
 */
 
 #include <bits/stdc++.h>
+#include <exception>
+#include <random>
 
 using namespace std;
 
@@ -19,10 +21,10 @@ const int NO_EXEC_INSTR_THRESHOLD = 50000; // TODO choose this more carefully
 void load_ok_data(ifstream& fin, ifstream& fok)
 {
   assert(fin >> N);
-  perm.resize(N + 1);
-  for (int i = 1; i <= N; i++) {
+  perm.resize(N);
+  for (int i = 0; i < N; i++) {
     assert(fok >> perm[i]);
-    assert(0 < perm[i] and perm[i] <= N);
+    assert(0 <= perm[i] and perm[i] < N);
   }
   // assert(fok >> benchmark);
 }
@@ -98,7 +100,7 @@ bool valid(string instr, int expected_no)
   if (I.size() < 1)
     return false;
 
-  if (I[0] == "IF_LESS_GOTO" or I[0] == "IF_SAME_GOTO" or I[0] == "IF_DIFF_THEN_GOTO") {
+  if (I[0] == "IF_LESS_GOTO" or I[0] == "IF_SAME_GOTO" or I[0] == "IF_DIFF_GOTO") {
     if (I.size() != 4)
       return false;
 
@@ -173,8 +175,10 @@ bool parse_instructions(ifstream& fout)
 
   int idx = 0;
   for (auto line : instructions) {
-    if (!valid(line, idx))
+    if (!valid(line, idx)) {
+      cerr << "Instruction " << line << " is invalid\n";
       return false;
+    }
     idx++;
   }
 
@@ -183,6 +187,10 @@ bool parse_instructions(ifstream& fout)
 
 void execute_instruction(vector <string> I, int &pc) 
 {
+  cerr << "Instruction: ";
+  for (auto i : I)
+    cerr << i << ' ';
+  cerr << '\n';
   // do pc-- after the jump in case of GOTO instructions
   if (I[0] == "IF_LESS_GOTO") {
     int val1 = get_reg_val(I[1]);
@@ -193,7 +201,7 @@ void execute_instruction(vector <string> I, int &pc)
       pc--;
     }
   }
-  else if (I[0] == "IF_DIFF_THEN_GOTO") {
+  else if (I[0] == "IF_DIFF_GOTO") {
     int val1 = get_reg_val(I[1]);
     int val2 = get_reg_val(I[2]);
 
@@ -202,7 +210,7 @@ void execute_instruction(vector <string> I, int &pc)
       pc--;
     }
   }
-  else if (I[0] == "IF_SAME_THEN_GOTO") {
+  else if (I[0] == "IF_SAME_GOTO") {
     int val1 = get_reg_val(I[1]);
     int val2 = get_reg_val(I[2]);
 
@@ -223,7 +231,7 @@ void execute_instruction(vector <string> I, int &pc)
   }
   else if (I[0] == "PLOAD") {
     int val = get_reg_val(I[1]);
-    if (val < 1 or val > N)
+    if (val < 0 or val >= N)
       throw "Runtime error";
 
     reg[I[1][0] - 'A'] = perm[val];
@@ -235,19 +243,19 @@ void execute_instruction(vector <string> I, int &pc)
     reg[I[1][0] - 'A'] = val2;
     reg[I[2][0] - 'A'] = val1;
   }
-  if (I[0] == "PSWAP") {
+  else if (I[0] == "PSWAP") {
     int val1 = get_reg_val(I[1]);
-    if (val1 < 1 or val1 > N)
+    if (val1 < 0 or val1 >= N)
       throw "Runtime error";
 
     int val2 = get_reg_val(I[2]);
-    if (val2 < 2 or val2 > N)
+    if (val2 < 0 or val2 >= N)
       throw "Runtime error";
 
     swap(perm[val1], perm[val2]);
   }
   else if (I[0] == "END") {
-    pc = -1;
+    pc = -2;
   }
   else
     throw "Runtime error";
@@ -256,20 +264,31 @@ void execute_instruction(vector <string> I, int &pc)
 void execute()
 {
   for (int pc = 0; pc < (int)decoded_ops.size(); pc++) {
+    // cout << "Executing instruction " << pc << "(" << instructions[pc] << ")\n";
+    // cout << "Current permutation: ";
+    // for (int i = 0; i < N; i++)
+    //   cout << perm[i] << ' ';
+    // cout << '\n';
+    // cout << "Registers: ";
+    // for (int i = 0; i < 5; i++)
+    //   cout << (char)('A' + i) << "=" << reg[i] << ' ';
+    // cout << '\n';
+
     execute_instruction(decoded_ops[pc], pc);
     no_executed_instructions++;
 
+    // cout << '\n';
     if (no_executed_instructions > NO_EXEC_INSTR_THRESHOLD)
       throw "Too many instructions\n";
 
-    if (pc == -1) // END was called
+    if (pc == -2) // END was called
       break;
   }
 }
 
 bool valid_output() 
 {
-  for (int i = 1; i <= N; i++)
+  for (int i = 0; i < N; i++)
     if (perm[i] != i)
       return false;
   return true;
@@ -277,32 +296,54 @@ bool valid_output()
 
 int main(int argc, char** argv)
 {
-  assert(argc == 3);
+  assert(argc == 4);
 
   string input_file(argv[1]);
-  string output_file(argv[1]);
-  string answer_file(argv[1]);
+  string output_file(argv[2]);
+  string answer_file(argv[3]);
   
   ifstream fin(input_file);
   ifstream fout(output_file);
   ifstream fok(answer_file);
 
-  load_ok_data(fin, fok);
+  // load_ok_data(fin, fok);
+  fin >> N;
+  perm.resize(N);
 
   try {
     if (!parse_instructions(fout)) {
       throw "Invalid input\n";
     }
 
-    execute();
+    // try 10 random permutations of size N
+    mt19937 rnd(time(0));
+    for (int trial = 0; trial < 10; trial++) {
+      iota(perm.begin(), perm.end(), 0);
+      shuffle(perm.begin(), perm.end(), rnd);
+      // reset all registers
+      fill(reg.begin(), reg.end(), 0);
+      no_executed_instructions = 0;
+      auto original_permutation = perm;
 
-    if (valid_output())
-      cout << "OK\n";
-    else
-      cout << "WA\n";
+      execute();
+
+      if (valid_output())
+        cout << "OK\n";
+      else {
+        cout << "WA on trial " << trial << "\n";
+        // cout << "Original permutation: " << '\n';
+        // for (int i = 0; i < N; i++)
+        //   cout << original_permutation[i] << ' ';
+        // cout << '\n';
+        // cout << "Final permutation: " << '\n';
+        // for (int i = 0; i < N; i++)
+        //   cout << perm[i] << ' ';
+      }
+    }
   }
-  catch(...) {
+  catch(const char* e) {
     cout << "WA\n";
+    cout << e << '\n';
   }
 
   return 0;
