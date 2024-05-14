@@ -5,8 +5,25 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+/*
+ * ------------------------------ VALIDATOR PARAMETERS
+ * ------------------------------ Modify the values of the following constants
+ * to configure the validator.
+ */
+// Set this to false for less verbose debugging output
+bool DISPLAY_MOVES = true;
+// Set this to false for less verbose debugging output
+bool DISPLAY_FINAL_PERM = true;
+// Modify this variable for testing the program on a larger number of
+// permutations
+const int NO_TRIALS = 1;
+// Modify this number for a different value of N
+const int N = 3;
+// Modify this string to change the path of the input program
+string input_file = "input.txt";
+ifstream fin(input_file);
+
 // Global state of the interpreter
-int N;
 vector<string> instructions;
 vector<vector<string>> decoded_ops;
 vector<int> reg(5, 0);
@@ -15,9 +32,6 @@ vector<int> perm, original_permutation;
 int no_executed_instructions = 0;
 
 const int NO_EXEC_INSTR_THRESHOLD = 10'000'000;
-
-// Set this to true for more verbose debugging output
-bool DISPLAY_MOVES = false;
 
 vector<string> DecodeInstruction(string instr) {
   vector<string> tokens;
@@ -69,8 +83,8 @@ bool FetchAndDecode(string instr, int expected_instruction_idx) {
   }
 
   if (instruction_index != expected_instruction_idx) {
-    cout << "[!] [!] Found << " << instruction_index
-         << "as the instruction index. Expected " << expected_instruction_idx
+    cout << "[!] Found " << instruction_index
+         << " as the instruction index. Expected " << expected_instruction_idx
          << '\n';
     return false;
   }
@@ -92,7 +106,7 @@ bool FetchAndDecode(string instr, int expected_instruction_idx) {
   decoded_ops.push_back(instruction);
 
   if (instruction.size() < 1) {
-    cout << "[!] Invalid instruction arity\n";
+    cout << "[!] No instruction is specified\n";
     return false;
   }
 
@@ -104,18 +118,19 @@ bool FetchAndDecode(string instr, int expected_instruction_idx) {
     }
 
     if (!IsRegister(instruction[1])) {
-      cout << instruction[1] << " is not a valid variable\n";
+      cout << "[!] " << instruction[1] << " is not a valid variable\n";
       return false;
     }
 
     if (!IsRegister(instruction[2])) {
-      cout << instruction[2] << " is not a valid variable\n";
+      cout << "[!] " << instruction[2] << " is not a valid variable\n";
       return false;
     }
 
     if (stoi(instruction[3]) < 0 or
         stoi(instruction[3]) >= (int)instructions.size()) {
-      cout << stoi(instruction[3]) << " is not a valid instruction index\n";
+      cout << "[!] " << stoi(instruction[3])
+           << " is not a valid instruction index\n";
       return false;
     }
   } else if (instruction[0] == "ASSIGN") {
@@ -125,12 +140,13 @@ bool FetchAndDecode(string instr, int expected_instruction_idx) {
     }
 
     if (!IsVariableRegister(instruction[1])) {
-      cout << instruction[1] << " is not a valid non-constant variable\n";
+      cout << "[!] " << instruction[1]
+           << " is not a valid non-constant variable\n";
       return false;
     }
 
     if (!IsRegister(instruction[2])) {
-      cout << instruction[2] << " is not a valid variable\n";
+      cout << "[!] " << instruction[2] << " is not a valid variable\n";
       return false;
     }
   } else if (instruction[0] == "INC" or instruction[0] == "DEC" or
@@ -141,7 +157,8 @@ bool FetchAndDecode(string instr, int expected_instruction_idx) {
     }
 
     if (!IsVariableRegister(instruction[1])) {
-      cout << instruction[1] << " is not a valid non-constant variable\n";
+      cout << "[!] " << instruction[1]
+           << " is not a valid non-constant variable\n";
       return false;
     }
   } else if (instruction[0] == "SWAP" or instruction[0] == "PSWAP") {
@@ -151,12 +168,14 @@ bool FetchAndDecode(string instr, int expected_instruction_idx) {
     }
 
     if (!IsVariableRegister(instruction[1])) {
-      cout << instruction[1] << " is not a valid non-constant variable\n";
+      cout << "[!] " << instruction[1]
+           << " is not a valid non-constant variable\n";
       return false;
     }
 
     if (!IsVariableRegister(instruction[2])) {
-      cout << instruction[2] << " is not a valid non-constant variable\n";
+      cout << "[!] " << instruction[2]
+           << " is not a valid non-constant variable\n";
       return false;
     }
   } else if (instruction[0] == "END") {
@@ -164,8 +183,10 @@ bool FetchAndDecode(string instr, int expected_instruction_idx) {
       cout << "[!] Invalid instruction arity\n";
       return false;
     }
-  } else
+  } else {
+    cout << "[!] Instruction " << instruction[0] << " does not exist\n";
     return false;
+  }
 
   return true;
 }
@@ -179,17 +200,17 @@ bool LoadAndValidateInstructions(ifstream &fout) {
   cout << "The input has " << instructions.size() << " lines\n";
 
   int idx = 0;
-  for (auto line : instructions) {
-    if (!FetchAndDecode(line, idx)) {
-      cout << "[!] Invalid instruction " << line << '\n';
+  for (auto instr : instructions) {
+    if (!FetchAndDecode(instr, idx)) {
+      cout << "[!] Instruction " << instr << " is invalid\n";
       return false;
     } else {
-      cout << "[+] " << line << "\n";
+      cout << "[+] " << instr << "\n";
     }
     idx++;
   }
 
-  cout << "[PROGRAM DECODED SUCCESSFULLY]\n\n";
+  cout << "[PROGRAM DECODED SUCCESSFULLY]\n\n\n";
   return true;
 }
 
@@ -228,8 +249,11 @@ void ExecuteInstruction(vector<string> I, int &pc) {
     reg[I[1][0] - 'A']--;
   } else if (I[0] == "PLOAD") {
     int val = GetRegisterValue(I[1]);
-    if (val < 0 or val >= N)
+    if (val < 0 or val >= N) {
+      cout << "[!] The value of variable " << I[1] << " is " << val
+           << " which is invalid\n";
       throw "Runtime error";
+    }
 
     reg[I[1][0] - 'A'] = perm[val];
   } else if (I[0] == "SWAP") {
@@ -240,12 +264,18 @@ void ExecuteInstruction(vector<string> I, int &pc) {
     reg[I[2][0] - 'A'] = val1;
   } else if (I[0] == "PSWAP") {
     int val1 = GetRegisterValue(I[1]);
-    if (val1 < 0 or val1 >= N)
+    if (val1 < 0 or val1 >= N) {
+      cout << "[!] The value of variable " << I[1] << " is " << val1
+           << " which is invalid\n";
       throw "Runtime error";
+    }
 
     int val2 = GetRegisterValue(I[2]);
-    if (val2 < 0 or val2 >= N)
+    if (val2 < 0 or val2 >= N) {
+      cout << "[!] The value of variable " << I[2] << " is " << val2
+           << " which is invalid\n";
       throw "Runtime error";
+    }
 
     swap(perm[val1], perm[val2]);
   } else if (I[0] == "END") {
@@ -254,41 +284,47 @@ void ExecuteInstruction(vector<string> I, int &pc) {
     throw "Runtime error";
 }
 
-void Execute() {
+void Execute(int trial) {
   for (int pc = 0; pc < (int)decoded_ops.size(); pc++) {
     if (DISPLAY_MOVES) {
-      cout << "Program counter   = " << pc << '\n';
-      cout << "Permutation       = { ";
+      cout << "\n----------------------------------------------------\n";
+      cout << "Instructions executed so far:   " << no_executed_instructions
+           << "\n";
+      cout << "Instruction to run:             " << instructions[pc] << "\n";
+      cout << "Permutation:                    { ";
       for (int i = 0; i < N; i++)
         cout << perm[i] << ' ';
       cout << "}\n";
-      cout << "Variables:";
+      cout << "Variables:\n";
       for (int i = 0; i < 5; i++)
-        cout << "   * " << (char)('A' + i) << " = " << reg[i] << '\n';
-      cout << "Instruction to run:\n     " << instructions[pc] << "\n\n";
+        cout << "                                * " << (char)('A' + i) << " = "
+             << reg[i] << '\n';
+      cout << "----------------------------------------------------\n\n\n";
     }
 
     ExecuteInstruction(decoded_ops[pc], pc);
     no_executed_instructions++;
 
-    // cout << '\n';
     if (no_executed_instructions > NO_EXEC_INSTR_THRESHOLD)
       throw "Too many instructions\n";
 
     if (pc == -2) // END was called
       break;
   }
-}
 
-void EndOfExecutionPrint(int trial) {
-  cout << "\n\n[END OF EXECUTION " << trial + 1 << "/10]\n\n";
-  cout << "Original permutation: " << '\n';
-  for (int i = 0; i < N; i++)
-    cout << original_permutation[i] << ' ';
-  cout << '\n';
-  cout << "Final permutation: " << '\n';
-  for (int i = 0; i < N; i++)
-    cout << perm[i] << ' ';
+  if (DISPLAY_FINAL_PERM) {
+    cout << "Total number of executed instructions: "
+         << no_executed_instructions << '\n';
+    cout << "Original permutation:                  { ";
+    for (int i = 0; i < N; i++)
+      cout << original_permutation[i] << ' ';
+    cout << "}\n";
+    cout << "Final permutation:                     { ";
+    for (int i = 0; i < N; i++)
+      cout << perm[i] << ' ';
+    cout << "}\n";
+  }
+  cout << "[END OF EXECUTION " << trial + 1 << "/" << NO_TRIALS << "]\n\n\n";
 }
 
 bool ValidOutput() {
@@ -310,43 +346,51 @@ void GenerateRandomPerm(int trial) {
   no_executed_instructions = 0;
   original_permutation = perm;
 
-  cout << "[START OF EXECUTION " << trial + 1 << "/10]\n";
-  cout << "Using input permutation:\n";
-  for (int p : perm)
-    cout << p << ' ';
-  cout << '\n';
+  cout << "[START OF EXECUTION " << trial + 1 << "/" << NO_TRIALS << "]\n";
+  cout << "Using input permutation: { ";
+  for (int i = 0; i < N; i++)
+    cout << perm[i] << ' ';
+  cout << "}\n";
 }
 
-int main(int argc, char **argv) {
-  assert(argc == 3);
-
-  string input_file(argv[1]);
-  string output_file(argv[2]);
-
-  ifstream fin(input_file);
-  ifstream fout(output_file);
-
-  fin >> N;
-  perm.resize(N);
+int main() {
+  cout << "========================= WARNING!!! =========================\n";
+  cout << "The validator expects to read the program from a file called "
+          "`input.txt` placed in the same directory as the validator "
+          "itself.\nYou can change this file (and also configure the other "
+          "validator parameters) by changing the apropriate constant defined "
+          "at the beginning of the file.\n";
+  cout
+      << "==============================================================\n\n\n";
 
   try {
-    if (!LoadAndValidateInstructions(fout)) {
+    if (!LoadAndValidateInstructions(fin)) {
       throw "Invalid input\n";
     }
 
-    // try 10 random permutations of size N
-    for (int trial = 0; trial < 10; trial++) {
-      GenerateRandomPerm(trial);
-      Execute();
-      // EndOfExecutionPrint(trial);
-      // if (!ValidOutput()) {
-      //   cout << "WA on trial " << trial << "\n";
-      //   return 0;
-      // }
+    if (N < 0) {
+      cout << "The value for N should not be negative\n";
+      throw "Invalid input\n";
     }
-    cout << "OK\n";
+    if (N > 1e5) {
+      cout << "The value for N should not be larger than 100000\n";
+      throw "Invalid input\n";
+    }
+    perm.resize(N);
+
+    // try NO_TRIALS random permutations of size N
+    cout << "[TESTING THE PROGRAM ON " << NO_TRIALS
+         << " RANDOM PERMUTATIONS]\n\n\n";
+    for (int trial = 0; trial < NO_TRIALS; trial++) {
+      GenerateRandomPerm(trial);
+      Execute(trial);
+      if (!ValidOutput()) {
+        cout << "WA on trial " << trial << "\n";
+        return 0;
+      }
+    }
+    cout << "======== [+] OK ON ALL TESTS [+] ======== \n";
   } catch (const char *e) {
-    cout << "WA\n";
     cout << e << '\n';
   }
 
