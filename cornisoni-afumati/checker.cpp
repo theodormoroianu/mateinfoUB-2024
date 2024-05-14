@@ -151,9 +151,9 @@ bool LoadAndValidateInstructions(ifstream& fout)
   }
 
   int idx = 0;
-  for (auto line : instructions) {
-    if (!FetchAndDecode(line, idx)) {
-      cerr << "Instruction " << line << " is invalid\n";
+  for (auto instr : instructions) {
+    if (!FetchAndDecode(instr, idx)) {
+      cerr << "Instruction " << instr << " is invalid\n";
       return false;
     }
     idx++;
@@ -199,7 +199,7 @@ void ExecuteInstruction(vector <string> I, int &pc)
   else if (I[0] == "INC") {
     reg[I[1][0] - 'A']++;
   }
-  else if (I[1] == "DEC") {
+  else if (I[0] == "DEC") {
     reg[I[1][0] - 'A']--;
   }
   else if (I[0] == "PLOAD") {
