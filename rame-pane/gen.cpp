@@ -11,7 +11,7 @@ int main(int argc, char** argv) {
   int M = stoi(argv[3]);
   int RAMA_MAX = stoi(argv[4]);
   
-  mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
+  mt19937 rng(v);
   uniform_int_distribution<int> dist(1, RAMA_MAX);
 
   cout << N << " " << M << endl;
