@@ -1,5 +1,5 @@
 /**
- * Author:     Alexandru Tifui, Theodor Moroianu
+ * Authors:     Alexandru Tifui, Theodor Moroianu
  */
 
 #include <bits/stdc++.h>
@@ -12,18 +12,15 @@ using namespace std;
  */
 // Set this to false for less verbose debugging output
 bool DISPLAY_MOVES = true;
-// Set this to false for less verbose debugging output
-bool DISPLAY_FINAL_PERM = true;
+// Set this to false to see the moves when N becomes large
+bool HIDE_MOVES_LARGE_N = true;
+const int HIDE_MOVES_THRESHOLD = 50;
 // Modify this variable for testing the program on a larger number of
 // permutations
 const int NO_TRIALS = 1;
-// Modify this number for a different value of N
-const int N = 3;
-// Modify this string to change the path of the input program
-string input_file = "input.txt";
-ifstream fin(input_file);
 
 // Global state of the interpreter
+int N;
 vector<string> instructions;
 vector<vector<string>> decoded_ops;
 vector<int> reg(5, 0);
@@ -31,7 +28,7 @@ vector<int> perm, original_permutation;
 
 int no_executed_instructions = 0;
 
-const int NO_EXEC_INSTR_THRESHOLD = 10'000'000;
+const int NO_EXEC_INSTR_THRESHOLD = 5'000'000;
 
 vector<string> DecodeInstruction(string instr) {
   vector<string> tokens;
@@ -191,13 +188,25 @@ bool FetchAndDecode(string instr, int expected_instruction_idx) {
   return true;
 }
 
-bool LoadAndValidateInstructions(ifstream &fout) {
-  cout << "[TRYING TO DECODE THE PROVIDED PROGRAM]\n";
+bool LoadAndValidateInstructions() {
+  cout << "Enter the number of instructions your program has:\n> ";
+  int no_lines;
+  cin >> no_lines;
+  cout << "Enter " << no_lines
+       << " lines containing the program (indexed from 0 to " << no_lines - 1
+       << "):\n";
   string line;
-  while (getline(fout, line)) {
+  cin.ignore();
+  for (int i = 0; i < no_lines; i++) {
+    line = "";
+    while (line == "")
+      getline(cin, line);
     instructions.push_back(line);
   }
-  cout << "The input has " << instructions.size() << " lines\n";
+
+  cout << "\n";
+  cout << "[TRYING TO DECODE THE PROVIDED PROGRAM]\n";
+  // cout << "The input has " << instructions.size() << " lines\n";
 
   int idx = 0;
   for (auto instr : instructions) {
@@ -287,19 +296,18 @@ void ExecuteInstruction(vector<string> I, int &pc) {
 void Execute(int trial) {
   for (int pc = 0; pc < (int)decoded_ops.size(); pc++) {
     if (DISPLAY_MOVES) {
-      cout << "\n----------------------------------------------------\n";
-      cout << "Instructions executed so far:   " << no_executed_instructions
-           << "\n";
-      cout << "Instruction to run:             " << instructions[pc] << "\n";
-      cout << "Permutation:                    { ";
+      cout << "\nvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\n";
+      cout << "Nr instructions executed: " << no_executed_instructions << "\n";
+      cout << "Next instruction to run:  " << instructions[pc] << "\n";
+      cout << "Permutation:              { ";
       for (int i = 0; i < N; i++)
         cout << perm[i] << ' ';
       cout << "}\n";
-      cout << "Variables:\n";
-      for (int i = 0; i < 5; i++)
-        cout << "                                * " << (char)('A' + i) << " = "
+      cout << "Variables:                * A = " << reg[0] << '\n';
+      for (int i = 1; i < 5; i++)
+        cout << "                          * " << (char)('A' + i) << " = "
              << reg[i] << '\n';
-      cout << "----------------------------------------------------\n\n\n";
+      cout << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n\n";
     }
 
     ExecuteInstruction(decoded_ops[pc], pc);
@@ -312,18 +320,16 @@ void Execute(int trial) {
       break;
   }
 
-  if (DISPLAY_FINAL_PERM) {
-    cout << "Total number of executed instructions: "
-         << no_executed_instructions << '\n';
-    cout << "Original permutation:                  { ";
-    for (int i = 0; i < N; i++)
-      cout << original_permutation[i] << ' ';
-    cout << "}\n";
-    cout << "Final permutation:                     { ";
-    for (int i = 0; i < N; i++)
-      cout << perm[i] << ' ';
-    cout << "}\n";
-  }
+  cout << "Total number of executed instructions: " << no_executed_instructions
+       << '\n';
+  cout << "Original permutation:                  { ";
+  for (int i = 0; i < N; i++)
+    cout << original_permutation[i] << ' ';
+  cout << "}\n";
+  cout << "Final permutation:                     { ";
+  for (int i = 0; i < N; i++)
+    cout << perm[i] << ' ';
+  cout << "}\n";
   cout << "[END OF EXECUTION " << trial + 1 << "/" << NO_TRIALS << "]\n\n\n";
 }
 
@@ -355,18 +361,14 @@ void GenerateRandomPerm(int trial) {
 
 int main() {
   cout << "========================= WARNING!!! =========================\n";
-  cout << "The validator expects to read the program from a file called "
-          "`input.txt` placed in the same directory as the validator "
-          "itself.\nYou can change this file (and also configure the other "
-          "validator parameters) by changing the apropriate constant defined "
+  cout << "You can customize the validator by changing the "
+          "apropriate\nconstants defined "
           "at the beginning of the file.\n";
-  cout
-      << "==============================================================\n\n\n";
+  cout << "==============================================================\n";
 
   try {
-    if (!LoadAndValidateInstructions(fin)) {
-      throw "Invalid input\n";
-    }
+    cout << "\nEnter the value for N (the permutation length):\n> ";
+    cin >> N;
 
     if (N < 0) {
       cout << "The value for N should not be negative\n";
@@ -376,7 +378,16 @@ int main() {
       cout << "The value for N should not be larger than 100000\n";
       throw "Invalid input\n";
     }
+    if (N > HIDE_MOVES_THRESHOLD and HIDE_MOVES_LARGE_N) {
+      cout << "Hiding the moves, as N is too large (this would slow down stdout)\n";
+      cout << "If you want to see the moves, set HIDE_MOVES_LARGE_N to false at the beginning of the file\n";
+      DISPLAY_MOVES = false;
+    }
     perm.resize(N);
+
+    if (!LoadAndValidateInstructions()) {
+      throw "Invalid input\n";
+    }
 
     // try NO_TRIALS random permutations of size N
     cout << "[TESTING THE PROGRAM ON " << NO_TRIALS
