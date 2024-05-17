@@ -2,12 +2,13 @@
 using namespace std;
 
 int main(int argc, char** argv) {
-  int R = stoi(argv[1]);
-  int P = stoi(argv[2]);
-  int VMAX = stoi(argv[3]);
-  int X = stoi(argv[4]);
+  int v = stoi(argv[1]);
+  int R = stoi(argv[2]);
+  int P = stoi(argv[3]);
+  int VMAX = stoi(argv[4]);
+  int X = stoi(argv[5]);
 
-  mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
+  mt19937 rng(v);
   uniform_int_distribution <int> distr(1, VMAX);
 
   cout << R << ' ' << P << ' ' << X << '\n';
@@ -17,8 +18,12 @@ int main(int argc, char** argv) {
 
   cout << '\n';
 
-  for (int i = 0; i < P; i++)
-    cout << distr(rng) << ' ';
+  for (int i = 0; i < P; i++) {
+    int val = distr(rng);
+    if (v / 10 == 4)
+      val = val % 5 + 1;
+    cout << val << ' ';
+  }
 
   cout << '\n';
 }

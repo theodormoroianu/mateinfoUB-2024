@@ -53,16 +53,10 @@ int main()
     for (int i = total_sum; i >= r; i--)
       Add(rucsac[i], rucsac[i - r]);
 
-  for (auto p : pireu) {
-    vector <int> rucsac_sp = rucsac;
-    for (int i = 1; i < (int)rucsac_sp.size(); i++)
-      Add(rucsac_sp[i], rucsac_sp[i - 1]);
-    
-    for (int i = 1; i < (int)rucsac.size(); i++) {
-      int from = max(0, i - p);
-      rucsac[i] = (rucsac_sp[i] - (from ? rucsac_sp[from - 1] : 0) + MOD) % MOD;
-    }
-  }
+  for (auto p : pireu)
+    for (int i = total_sum; i >= 0; i--)
+        for (int j = max(0, i - p); j < i; j++)
+            Add(rucsac[i], rucsac[j]);
 
   int ans = 0;
   const int INV2 = Put(2, MOD - 2);

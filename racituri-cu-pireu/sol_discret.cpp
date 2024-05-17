@@ -45,7 +45,8 @@ int main()
     assert(x <= 1000);
   }
 
-  int total_sum = accumulate(racituri.begin(), racituri.end(), 0) + accumulate(pireu.begin(), pireu.end(), 0);
+  // int total_sum = accumulate(racituri.begin(), racituri.end(), 0) + accumulate(pireu.begin(), pireu.end(), 0);
+  int total_sum = accumulate(racituri.begin(), racituri.end(), 0);
   vector <int> rucsac(total_sum + 1, 0);
   rucsac[0] = 1;
 
@@ -53,16 +54,16 @@ int main()
     for (int i = total_sum; i >= r; i--)
       Add(rucsac[i], rucsac[i - r]);
 
-  for (auto p : pireu) {
-    vector <int> rucsac_sp = rucsac;
-    for (int i = 1; i < (int)rucsac_sp.size(); i++)
-      Add(rucsac_sp[i], rucsac_sp[i - 1]);
-    
-    for (int i = 1; i < (int)rucsac.size(); i++) {
-      int from = max(0, i - p);
-      rucsac[i] = (rucsac_sp[i] - (from ? rucsac_sp[from - 1] : 0) + MOD) % MOD;
-    }
-  }
+  // for (auto p : pireu) {
+  //   vector <int> rucsac_sp = rucsac;
+  //   for (int i = 1; i < (int)rucsac_sp.size(); i++)
+  //     Add(rucsac_sp[i], rucsac_sp[i - 1]);
+  //   
+  //   for (int i = 1; i < (int)rucsac.size(); i++) {
+  //     int from = max(0, i - p);
+  //     rucsac[i] = (rucsac_sp[i] - (from ? rucsac_sp[from - 1] : 0) + MOD) % MOD;
+  //   }
+  // }
 
   int ans = 0;
   const int INV2 = Put(2, MOD - 2);
@@ -75,8 +76,8 @@ int main()
   }
 
   int total_mods = Put(2, R);
-  for (auto i : pireu)
-    total_mods = 1LL * total_mods * (i + 1) % MOD;
+  // for (auto i : pireu)
+  //   total_mods = 1LL * total_mods * (i + 1) % MOD;
 
   ans = 1LL * ans * Put(total_mods, MOD - 2) % MOD;
 
