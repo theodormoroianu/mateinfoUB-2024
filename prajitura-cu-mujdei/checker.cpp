@@ -31,6 +31,10 @@ int main(int argc, char** argv) {
     int in_a = 0, in_b = 0;
     int nr_op;
     output_stream >> nr_op;
+    if (nr_op > 1e6) {
+      cout << "WA\n";
+      return 0;
+    }
 
     while (nr_op--) {
       string op;

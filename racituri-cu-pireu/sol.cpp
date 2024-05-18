@@ -31,9 +31,6 @@ void Add(int& a, int b)
 
 int main()
 {
-  ios_base::sync_with_stdio(false);
-  cin.tie(nullptr);
-
   int R, P, X;
   cin >> R >> P >> X;
   assert(R <= 100 && P <= 100 && X <= 200'000);

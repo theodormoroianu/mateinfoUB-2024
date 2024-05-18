@@ -15,6 +15,9 @@ int main()
     cout << "IMPOSIBIL\n";
     return 0;
   }
+  if (A * B >= 1e7) {
+    assert(false);
+  }
 
   vector<vector<tuple <int, int, string>>> dp(
     A + 1,

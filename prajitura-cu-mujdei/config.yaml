@@ -1,7 +1,7 @@
 problem:
   input_file: stdin
   output_file: stdout
-  time_limit_ms: 400 
+  time_limit_ms: 200 
 
 generation:
   model_solution: "sol.cpp"

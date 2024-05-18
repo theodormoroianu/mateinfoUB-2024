@@ -13,9 +13,6 @@ typedef long long i64;
 
 int main()
 {
-  ios_base::sync_with_stdio(false);
-  cin.tie(nullptr);
-
   int R, P, X;
   cin >> R >> P >> X;
 
