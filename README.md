@@ -32,3 +32,13 @@ Run:
 ```Bash
 $ cprep evaluate
 ```
+
+## CMS Checker
+
+We have to upload a staticly linked checker to CMS. To do this, we need to compile the checker with the following command:
+```Bash
+g++ -O2 -static CMS_checker.cpp -lstdc++ -lm -lc -std=c++20 -s -o checker
+```
+
+Use `prajitura-cu-mujdei/CMS_checker.cpp` as example.
+The documentation is [here](https://cms.readthedocs.io/en/v1.4/Task%20types.html#tasktypes-checker).
