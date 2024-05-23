@@ -140,15 +140,12 @@ bool LoadAndValidateInstructions(ifstream &fout) {
   }
 
   if (instructions.size() > NO_MAX_INSTR_THRESHOLD) {
-    cerr << instructions.size() << '\n';
-    cerr << "Too many instructions\n";
     return false;
   }
 
   int idx = 0;
   for (auto instr : instructions) {
     if (!FetchAndDecode(instr, idx)) {
-      cerr << "Instruction " << instr << " is invalid\n";
       return false;
     }
     idx++;
@@ -220,24 +217,10 @@ void ExecuteInstruction(vector<string> I, int &pc) {
 
 void Execute() {
   for (int pc = 0; pc < (int)decoded_ops.size(); pc++) {
-    if (DISPLAY_MOVES) {
-      cerr << "Program counter   = " << pc << '\n';
-      cerr << "Permutation       = { ";
-      for (int i = 0; i < N; i++)
-        cerr << perm[i] << ' ';
-      cerr << "}\n";
-      cerr << "Variable registers:";
-      for (int i = 0; i < 5; i++)
-        cerr << "   * " << (char)('A' + i) << " = " << reg[i] << '\n';
-      cerr << "Instruction to run:\n     " << instructions[pc] << "\n\n";
-    }
-
     ExecuteInstruction(decoded_ops[pc], pc);
     no_executed_instructions++;
 
-    // cerr << '\n';
     if (no_executed_instructions > NO_EXEC_INSTR_THRESHOLD) {
-      cerr << no_executed_instructions << '\n';
       throw "Too many executed instructions\n";
     }
 
@@ -257,8 +240,8 @@ int main(int argc, char **argv) {
   assert(argc == 4);
 
   string input_file(argv[1]);
-  string output_file(argv[2]);
-  string answer_file(argv[3]);
+  string output_file(argv[3]);
+  string answer_file(argv[2]);
 
   ifstream fin(input_file);
   ifstream fout(output_file);
@@ -286,27 +269,16 @@ int main(int argc, char **argv) {
       Execute();
 
       if (!valid_output()) {
-        for (int i = 0; i < N; i++)
-          cerr << perm[i] << ' ';
-        cerr << '\n';
-        for (auto i : original_permutation)
-          cerr << i << ' ';
-        cerr << '\n';
-        cout << "WA on trial " << trial << "\n";
+        cerr << "translate:wrong\n";
+        cout << "0.0\n";
         return 0;
-        // cerr << "Original permutation: " << '\n';
-        // for (int i = 0; i < N; i++)
-        //   cerr << original_permutation[i] << ' ';
-        // cerr << '\n';
-        // cerr << "Final permutation: " << '\n';
-        // for (int i = 0; i < N; i++)
-        //   cerr << perm[i] << ' ';
       }
     }
-    cout << "OK\n";
+    cout << "1.0\n";
+    cerr << "translate:success\n";
   } catch (const char *e) {
-    cout << "WA\n";
-    cerr << e << '\n';
+    cerr << "translate:wrong\n";
+    cout << "0.0\n";
   }
 
   return 0;

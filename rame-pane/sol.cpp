@@ -7,9 +7,9 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-const int NMAX = 1'000'000;
-const int MMAX = 1'000'000;
-const int RAMA_MAX = 1'000'000;
+const int NMAX = 1000000;
+const int MMAX = 1000000;
+const int RAMA_MAX = 1000000;
 
 int main()
 {

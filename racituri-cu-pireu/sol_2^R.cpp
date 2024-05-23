@@ -6,7 +6,7 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-const int MOD = 1'000'000'007;
+const int MOD = 1000000007;
 const int INV2 = (MOD + 1) / 2;
 
 typedef long long i64;

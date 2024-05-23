@@ -6,8 +6,8 @@ using namespace std;
 
 int main(int argc, char** argv) {
   string input_file(argv[1]);
-  string contestant_output(argv[3]);
   string correct_output(argv[2]);
+  string contestant_output(argv[3]);
 
   ifstream input_stream(input_file);
   ifstream output_stream(contestant_output);
@@ -22,8 +22,10 @@ int main(int argc, char** argv) {
       output_stream >> rez;
       if (rez == "IMPOSIBIL") {
         cout << "1.0\n";
+        cerr << "translate:success\n";
       } else {
-        cout << "WA\n";
+        cerr << "translate:wrong\n";
+        cout << "0.0\n";
       }
       return 0;
     }
@@ -86,13 +88,13 @@ int main(int argc, char** argv) {
       cerr << "translate:success\n";
     }
     else {
-      cerr << "Input incorect.\n";
-      cerr << "Dupa efectuarea operatiilor, un vas va avea " << in_a << " litri, iar celalalt " << in_b << " litri.\n";
+      cerr << "translate:wrong\n";
+      // cerr << "Dupa efectuarea operatiilor, un vas va avea " << in_a << " litri, iar celalalt " << in_b << " litri.\n";
       cout << "0.0\n";
     }
   }
   catch(...) {
-    cerr << "Invalid input\n";
+    cerr << "translate:wrong\n";
     cout << "0.0\n";
   }  
 }

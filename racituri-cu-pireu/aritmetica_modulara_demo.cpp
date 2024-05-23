@@ -2,7 +2,7 @@
 
 using namespace std;
 
-const int MOD = 1'000'000'007;
+const int MOD = 1000000007;
 
 int Putere(int a, int p) {
   int ans = 1;

@@ -17,7 +17,7 @@ bool HIDE_MOVES_LARGE_N = true;
 const int HIDE_MOVES_THRESHOLD = 50;
 // Modify this variable for testing the program on a larger number of
 // permutations
-const int NO_TRIALS = 1;
+const int NO_TRIALS = 10;
 
 // Global state of the interpreter
 int N;
@@ -342,8 +342,9 @@ bool ValidOutput() {
   return true;
 }
 
+mt19937 rnd(time(0));
+
 void GenerateRandomPerm(int trial) {
-  mt19937 rnd(time(0));
   iota(perm.begin(), perm.end(), 0);
   shuffle(perm.begin(), perm.end(), rnd);
 

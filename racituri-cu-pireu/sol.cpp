@@ -6,7 +6,7 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-const int MOD = 1'000'000'007;
+const int MOD = 1000000007;
 
 int Put(int a, int p)
 {
@@ -33,7 +33,7 @@ int main()
 {
   int R, P, X;
   cin >> R >> P >> X;
-  assert(R <= 100 && P <= 100 && X <= 200'000);
+  assert(R <= 100 && P <= 100 && X <= 200000);
 
   vector <int> racituri(R), pireu(P);
   for (auto &x : racituri) {
