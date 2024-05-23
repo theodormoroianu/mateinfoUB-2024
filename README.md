@@ -1,4 +1,21 @@
-# mateinfoUB-2024
+# MateInfoUB, 2024
+
+## Statements, Editorials, Solutions
+
+The following problems were given during the testing round:
+    * [A plus B](a-plus-b/)
+    * [A ori B](a-ori-b/)
+    * [A pe B](a-pe-b/)
+
+The following problems were given during the contest:
+    * [Cornișoni Afumați](cornisoni-afumati/)
+    * [Prajitură cu Mujdei](prajitura-cu-mujdei/)
+    * [Râme Pane](rame-pane/)
+    * [Răcituri cu Pireu](racituri-cu-pireu/)
+
+Each problem has the statement `enunt.pdf`, the official solution `sol.cpp`, and the tests `tests/`.
+
+The editorials are available in the root of the repository.
 
 ## `CPREP`
 
